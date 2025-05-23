@@ -1,0 +1,12 @@
+{
+  "name": "regis-bot",
+  "version": "1.0.0",
+  "description": "- Esse é um projeto em desenvolvimento de um bot no discord utilizando a biblioteca discord.js;",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
