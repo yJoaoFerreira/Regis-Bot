@@ -78,3 +78,10 @@ if (!token) {
 } else {
     client.login(token);
 }
+
+/* 
+- Fazer o "-" ter espaçamento igual o "+";
+- Adicionar o * para multiplicação;
+- Adicionar o / para divisão;
+- Adicionar suporte à mais de um argumento de bônus;
+*/ 
