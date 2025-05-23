@@ -15,18 +15,58 @@ client.once('ready', () => {
     console.log('-----------------------');
 });
 
+function formatRollOutput(total, rolls, originalRollString, modifier) {
+    let rollDetails = `[${rolls.join(', ')}] ${originalRollString}`;
+    if (modifier !== 0) {
+        rollDetails += ` ${modifier > 0 ? '+ ' : ''}${modifier}`;
+    }
+    return `\` ${total} \` ⟵ ${rollDetails}`;
+}
+
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
-    const prefix = '!';
+    const content = message.content.toLowerCase();
+    const rollRegex = /^(\d*)([#]?)d(\d+)([\+\-]\d+)?/i;
+    const match = content.match(rollRegex);
 
-    if (!message.content.startsWith(prefix)) return;
+    if (match) {
+        let numDice = parseInt(match[1]) || 1;
+        const individualRollsFlag = match[2] === '#';
+        let sides = parseInt(match[3]);
+        let modifier = 0;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
+        if (match[4]) {
+            modifier = parseInt(match[4]);
+        }
 
-    if (command === 'ping') {
-        await message.channel.send('Pong!');
+        if (numDice <= 0 || numDice > 100) {
+            return message.reply(`Não consigo rolar ${numDice} dados. Tente entre 1 e 100 dados.`);
+        }
+        if (sides <= 1 || sides > 1000) {
+            return message.reply(`Não consigo rolar um d${sides}. Tente dados com 2 a 1000 lados.`);
+        }
+
+        let fullResponse = '';
+
+        if (individualRollsFlag) {
+            const lines = [];
+            for (let i = 0; i < numDice; i++) {
+                const roll = Math.floor(Math.random() * sides) + 1;
+                const total = roll + modifier;
+                lines.push(formatRollOutput(total, [roll], `1d${sides}`, modifier));
+            }
+            fullResponse += lines.join('\n');
+        } else {
+            const rolls = [];
+            for (let i = 0; i < numDice; i++) {
+                rolls.push(Math.floor(Math.random() * sides) + 1);
+            }
+            const total = rolls.reduce((sum, current) => sum + current, 0) + modifier;
+            fullResponse += formatRollOutput(total, rolls, `${numDice}d${sides}`, modifier);
+        }
+        
+        await message.reply(fullResponse);
     }
 });
 
