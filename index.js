@@ -12,7 +12,6 @@ const client = new Client({
 
 client.once('ready', () => {
     console.log(`Bot logado como ${client.user.tag}`);
-    console.log('-----------------------');
 });
 
 function formatRollOutput(total, rolls, originalRollString, modifier) {
