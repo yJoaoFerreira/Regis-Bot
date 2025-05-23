@@ -41,10 +41,10 @@ client.on('messageCreate', async message => {
         }
 
         if (numDice <= 0 || numDice > 100) {
-            return message.reply(`Não consigo rolar ${numDice} dados. Tente entre 1 e 100 dados.`);
+            return message.reply(`Não consigo rolar ${numDice} dados. Tente entre 1 ~ 100 dados.`);
         }
         if (sides <= 1 || sides > 1000) {
-            return message.reply(`Não consigo rolar um d${sides}. Tente dados com 2 a 1000 lados.`);
+            return message.reply(`Não consigo rolar um d${sides}. Tente dados com d2 ~ d1000.`);
         }
 
         let fullResponse = '';
