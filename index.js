@@ -16,9 +16,11 @@ client.once('ready', () => {
 
 function formatRollOutput(total, rolls, originalRollString, modifier) {
     let rollDetails = `[${rolls.join(', ')}] ${originalRollString}`;
+    
     if (modifier !== 0) {
-        rollDetails += ` ${modifier > 0 ? '+ ' : ''}${modifier}`;
+        rollDetails += ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`;
     }
+    
     return `\` ${total} \` ⟵ ${rollDetails}`;
 }
 
@@ -79,8 +81,8 @@ if (!token) {
 }
 
 /* 
-- Fazer o "-" ter espaçamento igual o "+";
 - Adicionar o * para multiplicação;
 - Adicionar o / para divisão;
 - Adicionar suporte à mais de um argumento de bônus;
+- Caso seja crítico ou desastre, ficar em caps;
 */ 
