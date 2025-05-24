@@ -26,69 +26,81 @@ client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
     const content = message.content.toLowerCase();
-    const rollRegex = /^(\d*)([#]?)d(\d+)(?:([\*x\/])(\d+))?(?:([\+\-])(\d+))?/i;
+
+    const rollRegex = /^(\d*)([#]?)d(\d+)(.*)?/i;
     const match = content.match(rollRegex);
 
     if (match) {
         let numDice = parseInt(match[1]) || 1;
         const individualRollsFlag = match[2] === '#';
         let sides = parseInt(match[3]);
+        let rawModifiersString = match[4] ? match[4].trim() : '';
 
-        let opMulDiv = match[4];
-        let valMulDiv = parseInt(match[5]) || 1;
-
-        let opAddSub = match[6];
-        let valAddSub = parseInt(match[7]) || 0;
-        
         if (numDice <= 0 || numDice > 100) {
             return message.reply(`Não consigo rolar ${numDice} dados. Tente entre 1 ~ 100 dados.`);
         }
         if (sides <= 1 || sides > 1000) {
             return message.reply(`Não consigo rolar um d${sides}. Tente dados com d2 ~ d1000.`);
         }
-        if (valMulDiv <= 0 && (opMulDiv === '*' || opMulDiv === '/')) {
-            return message.reply("O valor para multiplicação/divisão deve ser maior que 0.");
-        }
-
 
         let fullResponse = '';
-        let originalRollStringUsed = `${numDice || ''}${individualRollsFlag ? '#' : ''}d${sides}`;
-        let finalModifierString = '';
+        
+        const modifierParserRegex = /([\+\-\*x\/])(\d+)/g;
 
-        if (opMulDiv) {
-            finalModifierString += `${opMulDiv === 'x' ? '*' : opMulDiv} ${valMulDiv}`;
-        }
-        if (opAddSub) {
-            finalModifierString += ` ${opAddSub} ${valAddSub}`;
-        }
-        if (!opMulDiv && !opAddSub) {
-             finalModifierString = '';
+        let modifiers = [];
+        let modMatch;
+
+        while ((modMatch = modifierParserRegex.exec(rawModifiersString)) !== null) {
+            modifiers.push({
+                operator: modMatch[1],
+                value: parseInt(modMatch[2])
+            });
         }
 
+        for (const mod of modifiers) {
+            if ((mod.operator === '*' || mod.operator === '/' || mod.operator === 'x') && mod.value <= 0) {
+                return message.reply("O valor para multiplicação/divisão deve ser maior que 0.");
+            }
+        }
+
+        let finalModifierString = modifiers.map(mod => {
+            let op = mod.operator;
+            if (op === 'x') op = '*';
+            return `${op} ${mod.value}`;
+        }).join(' ');
+
+        if (modifiers.length === 0) {
+            finalModifierString = '';
+        }
 
         if (individualRollsFlag) {
             const lines = [];
             for (let i = 0; i < numDice; i++) {
                 const roll = Math.floor(Math.random() * sides) + 1;
                 let currentTotal = roll;
+                let tempTotalForMulDiv = currentTotal;
 
-                if (opMulDiv === '*') {
-                    currentTotal *= valMulDiv;
-                } else if (opMulDiv === '/' && valMulDiv !== 0) {
-                    currentTotal = Math.floor(currentTotal / valMulDiv);
-                } else if (opMulDiv === 'x') {
-                    currentTotal *= valMulDiv;
+                for (const mod of modifiers) {
+                    if (mod.operator === '*' || mod.operator === 'x') {
+                        tempTotalForMulDiv *= mod.value;
+                    } else if (mod.operator === '/') {
+                        tempTotalForMulDiv = Math.floor(tempTotalForMulDiv / mod.value);
+                    }
                 }
+                currentTotal = tempTotalForMulDiv;
 
-                if (opAddSub === '+') {
-                    currentTotal += valAddSub;
-                } else if (opAddSub === '-') {
-                    currentTotal -= valAddSub;
+                for (const mod of modifiers) {
+                     if (mod.operator === '+') {
+                        currentTotal += mod.value;
+                    } else if (mod.operator === '-') {
+                        currentTotal -= mod.value;
+                    }
                 }
                 
                 lines.push(formatRollOutput(currentTotal, [roll], `1d${sides}`, finalModifierString));
             }
             fullResponse += lines.join('\n');
+
         } else {
             const rolls = [];
             for (let i = 0; i < numDice; i++) {
@@ -96,23 +108,29 @@ client.on('messageCreate', async message => {
             }
             let total = rolls.reduce((sum, current) => sum + current, 0);
 
-            if (opMulDiv === '*') {
-                total *= valMulDiv;
-            } else if (opMulDiv === '/' && valMulDiv !== 0) {
-                total = Math.floor(total / valMulDiv);
-            } else if (opMulDiv === 'x') {
-                 total *= valMulDiv;
+            let tempTotalForMulDiv = total;
+
+            for (const mod of modifiers) {
+                if (mod.operator === '*' || mod.operator === 'x') {
+                    tempTotalForMulDiv *= mod.value;
+                } else if (mod.operator === '/') {
+                    tempTotalForMulDiv = Math.floor(tempTotalForMulDiv / mod.value);
+                }
             }
 
-            if (opAddSub === '+') {
-                total += valAddSub;
-            } else if (opAddSub === '-') {
-                total -= valAddSub;
+            total = tempTotalForMulDiv;
+
+            for (const mod of modifiers) {
+                 if (mod.operator === '+') {
+                    total += mod.value;
+                } else if (mod.operator === '-') {
+                    total -= mod.value;
+                }
             }
             
             fullResponse += formatRollOutput(total, rolls, `${numDice}d${sides}`, finalModifierString);
         }
-        
+
         await message.reply(fullResponse);
     }
 });
@@ -127,6 +145,5 @@ if (!token) {
 }
 
 /* 
-- Adicionar suporte à mais de um argumento de bônus;
 - Caso seja crítico ou desastre, ficar em caps;
 */ 
