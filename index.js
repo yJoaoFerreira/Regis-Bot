@@ -14,8 +14,17 @@ client.once('ready', () => {
     console.log(`Bot logado como ${client.user.tag}`);
 });
 
-function formatRollOutput(total, rolls, originalRollString, finalModifierString) {
-    let rollDetails = `[${rolls.join(', ')}] ${originalRollString}`;
+function formatRollOutput(total, rolls, originalRollString, finalModifierString, sides) {
+    const formattedRolls = rolls.map(roll => {
+        if (roll === 1) {
+            return `**${roll}**`;
+        } else if (roll === sides) {
+            return `**${roll}**`;
+        }
+        return roll;
+    });
+
+    let rollDetails = `[${formattedRolls.join(', ')}] ${originalRollString}`;
     if (finalModifierString) {
         rollDetails += ` ${finalModifierString}`;
     }
@@ -97,7 +106,7 @@ client.on('messageCreate', async message => {
                     }
                 }
                 
-                lines.push(formatRollOutput(currentTotal, [roll], `1d${sides}`, finalModifierString));
+                lines.push(formatRollOutput(currentTotal, [roll], `1d${sides}`, finalModifierString, sides));
             }
             fullResponse += lines.join('\n');
 
@@ -128,7 +137,7 @@ client.on('messageCreate', async message => {
                 }
             }
             
-            fullResponse += formatRollOutput(total, rolls, `${numDice}d${sides}`, finalModifierString);
+            fullResponse += formatRollOutput(total, rolls, `${numDice}d${sides}`, finalModifierString, sides);
         }
 
         await message.reply(fullResponse);
@@ -143,7 +152,3 @@ if (!token) {
 } else {
     client.login(token);
 }
-
-/* 
-- Caso seja crítico ou desastre, ficar em caps;
-*/ 
