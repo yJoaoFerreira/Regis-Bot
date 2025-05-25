@@ -16,3 +16,4 @@
 - Possível a utilização de bônus e debuffs no dado (soma, subtração, divisão e multiplicação);
 - Utilização de Regex para captar o dado com o d maiúsculo ou minúsculo;
     - Possível capturar *, x ou X para multiplicação;
+- Add Negrito em resultados mínimos e resultados máximos;
